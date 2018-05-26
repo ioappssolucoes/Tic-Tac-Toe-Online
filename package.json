@@ -1,0 +1,33 @@
+{
+  "name": "tic-tac-toe-online",
+  "version": "1.0.0",
+  "description": "This is a Online Web Tic Tac Toe Game.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "watchify ./client/index.js -v -t babelify -o ./bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ioappssolucoes/Tic-Tac-Toe-Online.git"
+  },
+  "author": "Matheus Henrique Pitz and Marcus Vinicius Pitz from IO Apps and Brothers Games Studio",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ioappssolucoes/Tic-Tac-Toe-Online/issues"
+  },
+  "homepage": "https://github.com/ioappssolucoes/Tic-Tac-Toe-Online#readme",
+  "dependencies": {
+    "websocket": "^1.0.26"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-env": "^1.7.0",
+    "babelify": "^8.0.0",
+    "browserify": "^16.2.2",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "watchify": "^3.11.0"
+  }
+}
