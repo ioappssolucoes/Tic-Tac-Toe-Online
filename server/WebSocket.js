@@ -9,16 +9,15 @@
 **/
 module.exports =  function WebSocket (httpServer, c) {
 	// Import
-	const WebSocketServer = require('websocket').server;
+	const WebSocketServer = require('websocket').server;	
 	
 	// All clients are here.
-	let clients = [];
-	// Connection count, used to generate clientID.
+	let connections = [];
+	// Connection count, used to generate connectionID.
 	let connCount = 0;
 	// All configurations.
 	let config = {
-		testMode: false,
-		isJSON: false,
+		testMode: false,		
 		protocol: null
 	};
 	
@@ -29,9 +28,9 @@ module.exports =  function WebSocket (httpServer, c) {
 	});
 	
 	//Listeners
-	let onConnectListener = (client) => {};
-	let onMessageListener = (type, message, client) => {};
-	let onCloseConnectionListener = (client) => {};
+	let onConnectListener = (connection) => {};
+	let onMessageListener = (message, connectionID) => {};
+	let onCloseConnectionListener = (connection) => {};
 	let onRequestConnectionListener = (request) => {return true;};
 	//Listeners
 		
@@ -41,8 +40,6 @@ module.exports =  function WebSocket (httpServer, c) {
 		// Set config values.
 		if(c.testMode != undefined)
 			config.testMode = c.testMode;
-		if(c.isJSON != undefined)
-			config.isJSON = c.isJSON;
 		if(c.protocol != undefined)
 			config.protocol = c.protocol;
 	}
@@ -66,25 +63,23 @@ module.exports =  function WebSocket (httpServer, c) {
 	};
 	
 	// Return all clients connected.
-	this.getClients = () => clients;	
+	this.getConnections = () => connections;	
 	
 	// Send message to the connection
-	this.send = (client, message, type='utf8') => {
-		if (type === 'utf8') {
-			let msg = config.isJSON ? JSON.stringify(message) : message;
-			log('Sending: ' + msg);
-			client.sendUTF(msg);
-		} else {
-			client.sendBytes(message);
-		}
+	this.send = (connectionID, message) => {
+		connections[connectionID].sendUTF(JSON.stringify(message));
 	}
 	
 	// Send message to all connections.
-	this.sendBroadcastMessage = (message, type='utf8') => {
-		for (c in clients) {
-			this.send(clients[c], message, type);			
+	this.sendBroadcastMessage = (message) => {
+		for (c in connections) {
+			this.send(connections[c].connectionID, message);			
 		};
 	}
+	
+	this.dropConnection = (connectionID) => {
+		connections[connectionID].drop();
+	};
 	
 	function getConnectionCount() {
 		connCount++;
@@ -98,7 +93,7 @@ module.exports =  function WebSocket (httpServer, c) {
 	}
 
 	socket.on('request', (request) => {
-		// Verify if can we accept that connection
+		// Verify if can we accept that connection		
 		if (!onRequestConnectionListener(request)) {
 		  log('Connection from ' + request.origin + ' was rejected.');
 		  // call reject to reject that connection.
@@ -107,37 +102,30 @@ module.exports =  function WebSocket (httpServer, c) {
 		}    
 		// Accept connection and get its connection.
 		const connection = request.accept(config.protocol, request.origin);
-		// Generate clientID.
-		connection.clientID = getConnectionCount();
+		// Generate connectionID
+		connection.connectionID = getConnectionCount();
 		// Save connection.
-		clients[connection.clientID] = connection;
+		connections[connection.connectionID] = connection;
 		// Call onConnectListener.
-		onConnectListener(connection);
+		onConnectListener(connection.connectionID);
 		
-		log('Connection from ' + request.origin + ' was accepted:' + connection.clientID);
+		log('Connection from ' + request.remoteAddress + ' was accepted:' + connection.connectionID);
 		
 		// Set onMessageListener.
-		connection.on('message', (message) => {
-			// Verify the message type
-			if (message.type === 'utf8') {
-				// Verify if it need to convert the message.
-				let msg = config.json ? JSON.parse(message.utf8Data) : message.utf8Data
-				log('Received Message: ' + msg + ', from: ' + connection.clientID);
-				// Call the event.
-				onMessageListener(message.type, msg, connection);
-			} else if (message.type === 'binary') {
-				log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-				// Call the event.
-				onMessageListener(message.type, message.binaryData, connection);
-			}			
+		connection.on('message', (message) => {			
+			// Cconvert UTF8 string to JSON.
+			let msg = JSON.parse(message.utf8Data);
+			log('Received Message: ' + message.utf8Data + ', from: ' + connection.connectionID);
+			// Call the event.
+			onMessageListener(msg, connection.connectionID);			
 		});
 		
 		connection.on('close', (reasonCode, description) => {
-			log('Connection ' + connection.clientID + ' was disconnected. Reason Code '+reasonCode);
+			log('Connection ' + connection.connectionID + ' was disconnected. Reason Code '+reasonCode);
 			// Delete the connection
-			delete clients[connection.clientID];
+			delete connections[connection.connectionID];
 			// Call the event
-			onCloseConnectionListener(connection);
+			onCloseConnectionListener(connection.connectionID);
 		});
 		
 	});

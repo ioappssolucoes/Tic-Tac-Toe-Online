@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const ws = require('./server/WebSocket');
+const GameHandler = require('./server/GameHandler');
 
 
 const getMimeType = (ext) => {
@@ -38,22 +39,24 @@ const httpServer = http.createServer((req, res) => {
 // Create WebSocketServer.
 const webSocketInstance = new ws(httpServer, {testMode: true, isJSON: true});
 console.log('WebSocket started');
+// Set WebSocket Instance.
+GameHandler.setWS(webSocketInstance);
 
 // Set the listeners
-webSocketInstance.on('connect', (client) => {
-    console.log('New connection, ID: '+client.clientID);
+webSocketInstance.on('connect', (connectionID) => {
+    console.log('New connection, ID: '+connectionID);
 });
 
-webSocketInstance.on('message', (type, message, client) => {
-    console.log('Received a the message '+message+' from '+client.clientID);
-    webSocketInstance.send(client, {message: 'You are client '+client.clientID});
+webSocketInstance.on('disconnect', (connectionID) => {
+    console.log('The connection '+connectionID+' disconnected');
+    GameHandler.disconnectPlayer(connectionID);
 });
 
-webSocketInstance.on('disconnect', (client) => {
-    console.log('Connection '+client.clientID+' disconnected');
-});
-
-webSocketInstance.on('request', (request) => {
-    console.log('Received a request to connect '+request);
+webSocketInstance.on('request', (request) => {	
     return true;
+});
+
+webSocketInstance.on('message', (message, connectionID) => {
+	// Send to GameHandler the Client's message.	
+    GameHandler.executeAction(connectionID, message);
 });

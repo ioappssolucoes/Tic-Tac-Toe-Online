@@ -19,8 +19,8 @@ class ClientWebSocket {
             this.isConnected = false;
             this.onCloseListener();
         };
-        this.ws.onmessage = (msg) => {
-            this.onMessageListener(msg);
+        this.ws.onmessage = (msg) => {  			
+            this.onMessageListener(JSON.parse(msg.data));
         };
         this.ws.onerror = (err) => {
             this.onErrorListener(err);
@@ -42,7 +42,7 @@ class ClientWebSocket {
     // Send a message to teh server.
     send(msg) {
         if(this.isConnected)
-            this.ws.send(msg);
+            this.ws.send(JSON.stringify(msg));
     }
 
     // Close teh connection.
