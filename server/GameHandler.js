@@ -17,7 +17,7 @@ module.exports = new function GameHandler () {
 	 	When a player disconnect.
 	*/
 	this.disconnectPlayer = (connectionID) => {
-		
+		delete players[connectionID];
 	}
 	
 	/*
@@ -43,14 +43,24 @@ module.exports = new function GameHandler () {
 		// Get nickname.
 		let nickname = msg.content;
 		// Is nickname undefined?		
-		if(nickname == undefined || nickname.trim().length < 1) {			
+		if(nickname == undefined || nickname.trim().length < 1) {	
+			// Send a message with error
+			ws.send(connectionID, {
+				type: 'login-error',
+				content: 'Login error. Name can\'t be empty.'
+			});
 			// Close immediately the connection.
 			ws.dropConnection(connectionID);
 			return;
 		}
 		// Remove empty spaces.
 		nickname = nickname.trim();
-		if(hasNickname(nickname)) {			
+		if(hasNickname(nickname)) {	
+			// Send a message with error
+			ws.send(connectionID, {
+				type: 'login-error',
+				content: 'Login error. Name already exists.'
+			});
 			// Close immediately the connection.
 			ws.dropConnection(connectionID);
 			return;

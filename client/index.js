@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import ClientWS from './ClientWebSocket';
 import Login from './Login';
+import WaitingPlayer from './WaitingPlayer.js';
 
 /*
  * BEGIN functions
@@ -16,6 +17,8 @@ import Login from './Login';
 function onServerMessage(msg) {	
 	if(msg.type === 'wait') {
 		this.setState({status: 'waiting'});
+	} else if(msg.type === 'login-error') {
+		alert(msg.content);
 	} else if(msg.type === '') {
 		
 	}
@@ -70,7 +73,7 @@ class TicTacToe extends React.Component {
     	const getCurrentPage = () => {
     		if(this.state.status === 'waiting') {
     			return(
-    				<p>Is connected</p>
+    				<WaitingPlayer />
     			);
     		} else if(this.state.status === 'login') {
     			return(

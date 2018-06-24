@@ -2,28 +2,42 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
+function inputHandleChange(e) {
+	this.nickname = e.target.value;
+}
+
+function inputHandleKeyPress(e) {	
+	if(e.key === 'Enter')
+		this.buttonHandleClick();
+}
+
+function buttonHandleClick() {
+	this.props.onClick(this.nickname);
+}
+
 class Login extends React.Component {
 	constructor(props) {
 		super(props);
+		
+		// Binds
+		this.inputHandleChange = inputHandleChange.bind(this);
+		this.inputHandleKeyPress = inputHandleKeyPress.bind(this);
+		this.buttonHandleClick = buttonHandleClick.bind(this);
 	}
 	
-	render() {
-		
-		const nicknameRefHandle = (e) => {
-			this.nicknameRef = e;
-		};
-		
-		const loginClickHandle = () => {
-			this.props.onClick(this.nicknameRef.value);
-		};
-		
+	render() {						
 		return(
 			<div className={'row '+this.props.className}>
 				<div className={'row'}>
-					<input ref={(e) => nicknameRefHandle(e)} type="text" className={''} placeholder={'Nickname'} />
+					<input 
+						onChange={(e) => this.inputHandleChange(e)} 
+						onKeyPress={(e) => this.inputHandleKeyPress(e)}
+						type="text"
+						className={''}
+						placeholder={'Nickname'} />
 				</div>
 				<div className={'row'}>
-					<button onClick={() => loginClickHandle()} className={''}>Login</button>
+					<button onClick={() => this.buttonHandleClick()} className={''}>Login</button>
 				</div>
 			</div>
 		);
